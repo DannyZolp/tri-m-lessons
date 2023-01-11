@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { MantineProvider, Text } from "@mantine/core";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { App } from "./App";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDAAZ9I3Xq09Ias2WuVNhm3X376zkwLTzM",
@@ -20,7 +21,7 @@ const analytics = getAnalytics(app);
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <MantineProvider withGlobalStyles withNormalizeCSS>
-      <Text>Test</Text>
+      <App app={app} />
     </MantineProvider>
   </React.StrictMode>
 );
