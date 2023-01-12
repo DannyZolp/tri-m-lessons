@@ -6,7 +6,7 @@ import {
   Header,
   Image,
   LoadingOverlay,
-  MediaQuery,
+  MediaQuery
 } from "@mantine/core";
 import { FirebaseApp } from "firebase/app";
 import {
@@ -16,12 +16,7 @@ import {
   signInWithRedirect
 } from "firebase/auth";
 import { useEffect, useState } from "react";
-import {
-  collection,
-  doc,
-  getDoc,
-  getFirestore
-} from "firebase/firestore";
+import { collection, doc, getDoc, getFirestore } from "firebase/firestore";
 import { User } from "./components/User";
 import { NewUserModal } from "./modals/NewUser";
 import { StudentView } from "./views/StudentView";

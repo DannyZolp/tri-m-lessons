@@ -6,6 +6,7 @@ specifiers:
   '@mantine/dates': ^5.10.0
   '@mantine/form': ^5.10.0
   '@mantine/hooks': ^5.10.0
+  '@mantine/modals': ^5.10.0
   '@mantine/notifications': ^5.10.0
   '@mantine/tiptap': ^5.10.0
   '@tabler/icons': ^1.119.0
@@ -29,6 +30,7 @@ dependencies:
   '@mantine/dates': 5.10.0_afutlozjtr4cmm2smwl7mxxxdy
   '@mantine/form': 5.10.0_react@18.2.0
   '@mantine/hooks': 5.10.0_react@18.2.0
+  '@mantine/modals': 5.10.0_3m53ouna3laykmqkiimzgz4i2m
   '@mantine/notifications': 5.10.0_3m53ouna3laykmqkiimzgz4i2m
   '@mantine/tiptap': 5.10.0_hrmxb7curgorvwsburwpbzwpxe
   '@tabler/icons': 1.119.0_biqbaboplfbrettd7655fr4n2y
@@ -1197,6 +1199,21 @@ packages:
       react: '>=16.8.0'
     dependencies:
       react: 18.2.0
+    dev: false
+
+  /@mantine/modals/5.10.0_3m53ouna3laykmqkiimzgz4i2m:
+    resolution: {integrity: sha512-SP9mPoa7FlfGkVzjVMUZ36i7YmYMh7p/9CoeWT/0Rcy7WmOfotNBbs/H/9CXdMNVNZTkehEeHoKeVy9oEkk2zg==}
+    peerDependencies:
+      '@mantine/core': 5.10.0
+      '@mantine/hooks': 5.10.0
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      '@mantine/core': 5.10.0_lbfixegkxal6rwioqxubxet6s4
+      '@mantine/hooks': 5.10.0_react@18.2.0
+      '@mantine/utils': 5.10.0_react@18.2.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     dev: false
 
   /@mantine/notifications/5.10.0_3m53ouna3laykmqkiimzgz4i2m:

@@ -51,7 +51,7 @@ export const StudentView = ({ app }: StudentViewProps) => {
                   collection(db, "lessons"),
                   where("studentId", "==", null),
                   where("teacherId", "==", t.id),
-                  where("startDate", ">", new Date())
+                  where("startTime", ">", new Date())
                 )
               )
             ).size > 0
@@ -79,7 +79,7 @@ export const StudentView = ({ app }: StudentViewProps) => {
       <Grid mt="sm">
         <LoadingOverlay visible={loading} />
         {teachers?.map((t) => (
-          <Grid.Col sm={12} md={4}>
+          <Grid.Col sm={12} md={4} key={t.id}>
             <Card shadow="sm" p="lg" radius="md" withBorder>
               <Card.Section>
                 <Image src={t.image} height={250} alt={`${t.name} image`} />
@@ -111,6 +111,7 @@ export const StudentView = ({ app }: StudentViewProps) => {
                 onClick={() => {
                   setViewingTeacher(t);
                 }}
+                disabled={!t.available}
               >
                 View Open Lessons
               </Button>

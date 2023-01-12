@@ -5,20 +5,32 @@ import {
   Card,
   Group,
   Text,
-  ScrollArea
+  ScrollArea,
+  Paper,
+  Title,
+  Avatar,
+  Badge
 } from "@mantine/core";
 import { FirebaseApp } from "firebase/app";
 import { ITeacher } from "../types/ITeacher";
 import { grammaticallyCorrectJoin } from "../utils/gramaticallyCorrectJoin";
 import {
   collection,
+  doc,
   getDocs,
   getFirestore,
+  onSnapshot,
   query,
+  updateDoc,
   where
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ILesson } from "../types/ILesson";
+import { getPartOfDay } from "../utils/getPartOfDay";
+import { format, getMinutes } from "date-fns";
+import { IconClock } from "@tabler/icons";
+import { openConfirmModal } from "@mantine/modals";
+import { getAuth } from "firebase/auth";
 
 interface ViewLessonsModalProps {
   app: FirebaseApp;
@@ -36,21 +48,52 @@ export const ViewLessonsModal = ({
   if (!teacher) return <></>;
 
   const db = getFirestore(app);
+  const auth = getAuth(app);
 
   const [lessons, setLessons] = useState<ILesson[]>([]);
 
+  const openModal = (lesson: ILesson) =>
+    openConfirmModal({
+      title: "Confirm Lesson",
+      children: (
+        <Text>
+          Do you wish to sign up for a lesson with {teacher.name} from{" "}
+          {format(lesson.startTime, "h:mm a")} -{" "}
+          {format(lesson.endTime, "h:mm a")} on{" "}
+          {format(lesson.startTime, "MMMM do")}?
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      onConfirm: async () => {
+        await updateDoc(doc(collection(db, "lessons"), lesson.id), {
+          studentId: auth.currentUser?.uid
+        });
+      }
+    });
+
   useEffect(() => {
-    if (teacher) {
-      getDocs(
+    if (opened) {
+      onSnapshot(
         query(
           collection(db, "lessons"),
           where("teacherId", "==", teacher.id),
-          where("startDate", ">", new Date())
-        )
-      ).then((res) => {
-        setLessons(res.docs as any);
-        console.log(lessons);
-      });
+          where("studentId", "==", null),
+          where("startTime", ">", new Date())
+        ),
+        (res) => {
+          setLessons(
+            res.docs.map(
+              (d) =>
+                ({
+                  id: d.id,
+                  ...d.data(),
+                  startTime: d.data().startTime.toDate(),
+                  endTime: d.data().endTime.toDate()
+                } as any)
+            )
+          );
+        }
+      );
     }
   }, [teacher]);
 
@@ -60,38 +103,39 @@ export const ViewLessonsModal = ({
       onClose={() => setOpened(false)}
       title="Get a Lesson"
     >
-      <Grid>
-        <Grid.Col sm={12} md={6}>
-          <Card shadow="sm" p="lg" radius="md" withBorder>
-            <Card.Section>
-              <Image
-                src={teacher.image}
-                height={250}
-                alt={`${teacher.name} image`}
-              />
-            </Card.Section>
-            <Group position="apart">
-              <Text weight={500} mt="md">
-                {teacher.name}
-              </Text>
-            </Group>
-            <Text size="xs" color="dimmed" weight={600}>
-              {grammaticallyCorrectJoin(teacher.instruments)}
-            </Text>
+      <Badge
+        sx={{ paddingLeft: 0 }}
+        size="lg"
+        radius="xl"
+        color="teal"
+        leftSection={
+          <Avatar src={teacher.image} radius="xl" size={24} mr={5} />
+        }
+      >
+        {teacher.name}
+      </Badge>
 
-            <Text size="xs" color="dimmed">
-              {teacher.description}
+      <ScrollArea>
+        <Text color="dimmed">Click to Register</Text>
+        {lessons.map((l) => (
+          <Paper withBorder p="lg" onClick={() => openModal(l)} key={l.id}>
+            <Title size={20}>
+              {l.simpleTime}, {format(l.startTime, "MMMM do")}
+            </Title>
+            <Text>{l.location}</Text>
+            <Text color="dimmed">
+              <Group spacing="xs">
+                <IconClock />{" "}
+                <Text m={0}>
+                  {getMinutes(l.endTime.getTime() - l.startTime.getTime())} mins
+                  ({format(l.startTime, "h:mm a")} -{" "}
+                  {format(l.endTime, "h:mm a")})
+                </Text>
+              </Group>
             </Text>
-          </Card>
-        </Grid.Col>
-        <Grid.Col span={6}>
-          {lessons.length <= 0 ? (
-            <Text>Currently not available for lessons.</Text>
-          ) : (
-            <ScrollArea></ScrollArea>
-          )}
-        </Grid.Col>
-      </Grid>
+          </Paper>
+        ))}
+      </ScrollArea>
     </Modal>
   );
 };

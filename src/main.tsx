@@ -5,6 +5,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { App } from "./App";
 import { NotificationsProvider } from "@mantine/notifications";
+import { ModalsProvider } from "@mantine/modals";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDAAZ9I3Xq09Ias2WuVNhm3X376zkwLTzM",
@@ -22,9 +23,11 @@ const analytics = getAnalytics(app);
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <MantineProvider withGlobalStyles withNormalizeCSS>
-      <NotificationsProvider>
-        <App app={app} />
-      </NotificationsProvider>
+      <ModalsProvider>
+        <NotificationsProvider>
+          <App app={app} />
+        </NotificationsProvider>
+      </ModalsProvider>
     </MantineProvider>
   </React.StrictMode>
 );

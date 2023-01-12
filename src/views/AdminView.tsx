@@ -159,6 +159,7 @@ export const AdminView = ({ app }: AdminViewProps) => {
                 addDoc(collection(db, "lessons"), {
                   location: data.location,
                   teacherId: auth.currentUser?.uid,
+                  studentId: null,
                   simpleTime: getPartOfDay(form.values.time[0]),
                   startTime: setHours(
                     setMinutes(
