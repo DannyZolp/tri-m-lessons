@@ -1,24 +1,12 @@
 import {
   AppShell,
-  Avatar,
-  Badge,
-  Box,
-  Button,
-  Card,
   Center,
   Container,
-  Flex,
-  Grid,
   Group,
   Header,
   Image,
   LoadingOverlay,
   MediaQuery,
-  Navbar,
-  Paper,
-  Text,
-  Title,
-  UnstyledButton
 } from "@mantine/core";
 import { FirebaseApp } from "firebase/app";
 import {
@@ -32,14 +20,10 @@ import {
   collection,
   doc,
   getDoc,
-  getDocs,
   getFirestore
 } from "firebase/firestore";
 import { User } from "./components/User";
 import { NewUserModal } from "./modals/NewUser";
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
-import { grammaticallyCorrectJoin } from "./utils/gramaticallyCorrectJoin";
-import { useMediaQuery } from "@mantine/hooks";
 import { StudentView } from "./views/StudentView";
 import { AdminView } from "./views/AdminView";
 
@@ -50,7 +34,6 @@ export interface AppProps {
 export const App = ({ app }: AppProps) => {
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const storage = getStorage(app);
   const provider = new GoogleAuthProvider();
 
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
@@ -58,8 +41,6 @@ export const App = ({ app }: AppProps) => {
   const [newUser, setNewUser] = useState<boolean>(false);
   const [userData, setUserData] = useState<any>();
   const [adminView, setAdminView] = useState<boolean>(false);
-
-  const largeScreen = useMediaQuery("(min-width: 900px)");
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -125,6 +106,7 @@ export const App = ({ app }: AppProps) => {
                     image={auth.currentUser?.photoURL ?? ""}
                     name={userData?.name ?? ""}
                     instrument={userData?.instrument ?? ""}
+                    logout={() => auth.signOut()}
                   />
                 )}
               </Group>
