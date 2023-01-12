@@ -3,10 +3,16 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null;
+      allow read: if request.auth != null && request.auth.token.admin;
+      allow create: if request.auth != null && request.resource.data.keys().hasOnly(["instrument", "name", "pronounOne", "pronounTwo"]);
     }
-    match /teachers {
-      allow read;
+    match /teachers/{document=**} {
+      allow read: if request.auth != null;
+    }
+    match /lessons/{document=**} {
+      allow read: if request.auth != null;
+      allow update: if request.auth != null && resource.data.studentId == null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["studentId"]);
+      allow create, update, delete: if request.auth != null && request.auth.token.admin;
     }
   }
 }

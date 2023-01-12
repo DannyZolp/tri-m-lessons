@@ -64,7 +64,6 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
   const handleSubmit = (values: any) => {
     setSaving(true);
     setDoc(doc(collection(db, "users"), auth.currentUser?.uid ?? ""), {
-      id: auth.currentUser?.uid,
       ...values
     }).then(() => {
       setOpened(false);
