@@ -4,6 +4,7 @@ import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { doc, setDoc, getFirestore, collection } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import phone from "phone";
 
 interface NewUserModalProps {
   app: FirebaseApp;
@@ -32,39 +33,39 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  const [personalPronounOne, setPersonalPronounOne] = useState([
-    "He",
-    "She",
-    "They"
+  const [pronounOptions, setPronounOptions] = useState([
+    "he/him",
+    "he/they",
+    "she/her",
+    "she/they",
+    "they/them"
   ]);
-  const [personalPronounTwo, setPersonalPronounTwo] = useState([
-    "Him",
-    "Her",
-    "Them"
-  ]);
+
   const [saving, setSaving] = useState<boolean>(false);
 
   const form = useForm({
     initialValues: {
       name: "",
-      pronounOne: "",
-      pronounTwo: "",
+      pronouns: "",
+      phoneNumber: "",
       instrument: ""
     },
     validate: {
       name: (v) => (v.length > 0 ? null : "Please provide a name"),
-      pronounOne: (v) =>
-        v.length > 0 ? null : "Please select a preferred pronoun",
-      pronounTwo: (v) =>
-        v.length > 0 ? null : "Please select a preferred pronoun",
-      instrument: (v) => (v.length > 0 ? null : "Please select your instrument")
+      pronouns: (v) =>
+        v.length > 0 ? null : "Please select or add your preferred pronouns",
+      instrument: (v) =>
+        v.length > 0 ? null : "Please select your instrument",
+      phoneNumber: (v) =>
+        phone(v).isValid ? null : "Please enter a valid phone number"
     }
   });
 
   const handleSubmit = (values: any) => {
     setSaving(true);
     setDoc(doc(collection(db, "users"), auth.currentUser?.uid ?? ""), {
-      ...values
+      ...values,
+      phoneNumber: phone(values.phoneNumber)
     }).then(() => {
       setOpened(false);
     });
@@ -80,41 +81,27 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
           {...form.getInputProps("name")}
         />
 
-        <Grid>
-          <Grid.Col span={6}>
-            <Select
-              label="Personal Pronoun 1"
-              data={personalPronounOne}
-              placeholder="Select one"
-              nothingFound="Nothing found"
-              searchable
-              creatable
-              getCreateLabel={(query) => `+ Create ${query}`}
-              onCreate={(query) => {
-                setPersonalPronounOne([...personalPronounOne, query]);
-                return query;
-              }}
-              {...form.getInputProps("pronounOne")}
-            />
-          </Grid.Col>
+        <Select
+          label="Preferred Pronouns"
+          data={pronounOptions}
+          placeholder="Select one"
+          nothingFound="Nothing found"
+          searchable
+          creatable
+          getCreateLabel={(query) => `+ Create ${query}`}
+          onCreate={(query) => {
+            setPronounOptions([...pronounOptions, query]);
+            return query;
+          }}
+          {...form.getInputProps("pronouns")}
+        />
 
-          <Grid.Col span={6}>
-            <Select
-              label="Personal Pronoun 2"
-              data={personalPronounTwo}
-              placeholder="Select one"
-              nothingFound="Nothing found"
-              searchable
-              creatable
-              getCreateLabel={(query) => `+ Create ${query}`}
-              onCreate={(query) => {
-                setPersonalPronounTwo([...personalPronounTwo, query]);
-                return query;
-              }}
-              {...form.getInputProps("pronounTwo")}
-            />
-          </Grid.Col>
-        </Grid>
+        <TextInput
+          label="Phone number"
+          placeholder="262-123-4567"
+          description="If you wish to receive updates of your lessons via text messages, enter your phone number here. Standard texting and data rates may apply."
+          {...form.getInputProps("phoneNumber")}
+        />
 
         <Select
           label="Main Instrument"

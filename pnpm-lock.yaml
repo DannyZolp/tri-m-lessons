@@ -19,6 +19,7 @@ specifiers:
   date-fns: ^2.29.3
   dayjs: ^1.11.7
   firebase: ^9.15.0
+  phone: ^3.1.32
   react: ^18.2.0
   react-dom: ^18.2.0
   typescript: ^4.9.3
@@ -40,6 +41,7 @@ dependencies:
   date-fns: 2.29.3
   dayjs: 1.11.7
   firebase: 9.15.0
+  phone: 3.1.32
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
 
@@ -2217,6 +2219,11 @@ packages:
   /path-type/4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
     engines: {node: '>=8'}
+    dev: false
+
+  /phone/3.1.32:
+    resolution: {integrity: sha512-kT89uAqNr8sEXjv/2NDzp2Kpb/BQ5bTzHMLZFwUnqDnDBaObcO3qLzQ030tDlhxZrFVUd+EIq8pie5/L8SNVrQ==}
+    engines: {node: '>=12'}
     dev: false
 
   /picocolors/1.0.0:
