@@ -7,7 +7,10 @@ import {
   Button,
   LoadingOverlay,
   Group,
-  Badge
+  Badge,
+  Center,
+  Paper,
+  Divider
 } from "@mantine/core";
 import { FirebaseApp } from "firebase/app";
 import { grammaticallyCorrectJoin } from "../utils/gramaticallyCorrectJoin";
@@ -18,11 +21,15 @@ import {
   collection,
   getDocs,
   getFirestore,
+  onSnapshot,
   query,
   where
 } from "firebase/firestore";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import { ViewLessonsModal } from "../modals/ViewLessons";
+import { ILesson } from "../types/ILesson";
+import { format, getMinutes, subDays } from "date-fns";
+import { IconClock } from "@tabler/icons";
 
 interface StudentViewProps {
   app: FirebaseApp;
@@ -34,6 +41,8 @@ export const StudentView = ({ app }: StudentViewProps) => {
   const storage = getStorage(app);
 
   const [teachers, setTeachers] = useState<ITeacher[]>([]);
+  const [availableTeachers, setAvailableTeachers] = useState<string[]>([]);
+  const [lessons, setLessons] = useState<ILesson[]>([]);
   const [viewingTeacher, setViewingTeacher] = useState<ITeacher>();
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -43,22 +52,50 @@ export const StudentView = ({ app }: StudentViewProps) => {
         res.docs.map(async (t) => ({
           ...t.data(),
           id: t.id,
-          image: await getDownloadURL(ref(storage, t.data().image)),
-          available:
-            (
-              await getDocs(
-                query(
-                  collection(db, "lessons"),
-                  where("studentId", "==", null),
-                  where("teacherId", "==", t.id),
-                  where("startTime", ">", new Date())
-                )
-              )
-            ).size > 0
+          image: await getDownloadURL(ref(storage, t.data().image))
         }))
       ).then((t) => {
         setTeachers(t as ITeacher[]);
-        setLoading(false);
+
+        onSnapshot(
+          query(
+            collection(db, "lessons"),
+            where("studentId", "==", null),
+            where("startTime", ">", new Date())
+          ),
+          (res) => {
+            const teachersAvailable = [] as string[];
+
+            for (const lesson of res.docs) {
+              if (!teachersAvailable.includes(lesson.data().teacherId)) {
+                teachersAvailable.push(lesson.data().teacherId);
+              }
+            }
+
+            setAvailableTeachers(teachersAvailable);
+          }
+        );
+
+        getDocs(
+          query(
+            collection(db, "lessons"),
+            where("studentId", "==", auth.currentUser?.uid),
+            where("startTime", ">", subDays(new Date(), 1))
+          )
+        ).then((res) => {
+          setLessons(
+            res.docs.map(
+              (d) =>
+                ({
+                  ...d.data(),
+                  startTime: d.data().startTime.toDate(),
+                  endTime: d.data().endTime.toDate(),
+                  id: d.id
+                } as any)
+            )
+          );
+          setLoading(false);
+        });
       });
     });
   }, []);
@@ -71,6 +108,55 @@ export const StudentView = ({ app }: StudentViewProps) => {
         opened={viewingTeacher !== undefined}
         setOpened={() => setViewingTeacher(undefined)}
       />
+      {lessons.length <= 0 ? (
+        <Center>
+          <Text color="dimmed">Currently no lessons scheduled</Text>
+        </Center>
+      ) : (
+        <>
+          <Title>Upcoming Lessons</Title>
+
+          <Grid mt="sm">
+            {lessons.map((l) => (
+              <Grid.Col sm={12} md={6} key={l.id}>
+                <Paper withBorder p="lg" key={l.id}>
+                  <Grid>
+                    <Grid.Col span={4}>
+                      <Image
+                        radius="sm"
+                        src={teachers.find((t) => t.id === l.teacherId)?.image}
+                        height={80}
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={8}>
+                      <Title size={20}>
+                        {l.simpleTime}, {format(l.startTime, "MMMM do")}
+                      </Title>
+                      <Text>
+                        with {teachers.find((t) => t.id === l.teacherId)?.name}{" "}
+                        @ {l.location}
+                      </Text>
+                      <Text color="dimmed">
+                        <Group spacing="xs">
+                          <IconClock />{" "}
+                          <Text m={0}>
+                            {getMinutes(
+                              l.endTime.getTime() - l.startTime.getTime()
+                            )}{" "}
+                            mins ({format(l.startTime, "h:mm a")} -{" "}
+                            {format(l.endTime, "h:mm a")})
+                          </Text>
+                        </Group>
+                      </Text>
+                    </Grid.Col>
+                  </Grid>
+                </Paper>
+              </Grid.Col>
+            ))}
+          </Grid>
+        </>
+      )}
+      <Divider my="lg" />
       <Title>Schedule a Lesson</Title>
       <Text>
         You can schedule a lesson with any one of our Tri-M members from this
@@ -88,7 +174,7 @@ export const StudentView = ({ app }: StudentViewProps) => {
                 <Text weight={500} mt="md">
                   {t.name}
                 </Text>
-                {t.available ? (
+                {availableTeachers.includes(t.id) ? (
                   <Badge color="green">Available</Badge>
                 ) : (
                   <Badge color="red">Booked</Badge>
@@ -111,7 +197,7 @@ export const StudentView = ({ app }: StudentViewProps) => {
                 onClick={() => {
                   setViewingTeacher(t);
                 }}
-                disabled={!t.available}
+                disabled={!availableTeachers.includes(t.id)}
               >
                 View Open Lessons
               </Button>

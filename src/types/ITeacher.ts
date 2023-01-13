@@ -4,5 +4,4 @@ export interface ITeacher {
   description: string;
   image: string;
   instruments: string[];
-  available: boolean;
 }
