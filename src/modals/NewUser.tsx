@@ -65,7 +65,7 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
     setSaving(true);
     setDoc(doc(collection(db, "users"), auth.currentUser?.uid ?? ""), {
       ...values,
-      phoneNumber: phone(values.phoneNumber)
+      phoneNumber: phone(values.phoneNumber).phoneNumber
     }).then(() => {
       setOpened(false);
     });
