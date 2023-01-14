@@ -2,11 +2,13 @@ import {
   AppShell,
   Center,
   Container,
+  Flex,
   Group,
   Header,
   Image,
   LoadingOverlay,
-  MediaQuery
+  MediaQuery,
+  Title
 } from "@mantine/core";
 import { FirebaseApp } from "firebase/app";
 import {
@@ -110,12 +112,20 @@ export const App = ({ app }: AppProps) => {
           </Header>
         }
       >
-        {window.location.pathname === "/teachers" && adminView ? (
-          <ManageTeachersView app={app} />
-        ) : adminView ? (
-          <AdminView app={app} />
+        {loggedIn ? (
+          <>
+            {window.location.pathname === "/teachers" && adminView ? (
+              <ManageTeachersView app={app} />
+            ) : adminView ? (
+              <AdminView app={app} />
+            ) : (
+              <StudentView app={app} />
+            )}
+          </>
         ) : (
-          <StudentView app={app} />
+          <Flex style={{ height: "100%" }} justify="center" align="center">
+            <Title>Please login with Google</Title>
+          </Flex>
         )}
       </AppShell>
     </Container>
