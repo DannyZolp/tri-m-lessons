@@ -13,7 +13,7 @@ import {
   GoogleAuthProvider,
   getAuth,
   onAuthStateChanged,
-  signInWithRedirect
+  signInWithPopup
 } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { collection, doc, getDoc, getFirestore } from "firebase/firestore";
@@ -41,7 +41,7 @@ export const App = ({ app }: AppProps) => {
     if (user) {
       setLoggedIn(true);
     } else {
-      signInWithRedirect(auth, provider);
+      signInWithPopup(auth, provider);
     }
   });
 
