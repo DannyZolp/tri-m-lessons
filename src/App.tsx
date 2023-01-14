@@ -1,7 +1,9 @@
 import {
   AppShell,
+  Button,
   Center,
   Container,
+  Divider,
   Flex,
   Group,
   Header,
@@ -44,7 +46,7 @@ export const App = ({ app }: AppProps) => {
     if (user) {
       setLoggedIn(true);
     } else {
-      signInWithPopup(auth, provider);
+      setLoggedIn(false);
     }
   });
 
@@ -69,6 +71,8 @@ export const App = ({ app }: AppProps) => {
           }
         }
       );
+    } else {
+      setLoading(false);
     }
   }, [loggedIn]);
 
@@ -76,58 +80,73 @@ export const App = ({ app }: AppProps) => {
     <Container>
       <LoadingOverlay visible={loading} />
       <NewUserModal setOpened={setNewUser} opened={newUser} app={app} />
-      <AppShell
-        padding="md"
-        header={
-          <Header height={80} p="xs">
-            <MediaQuery largerThan="md" styles={{ display: "none" }}>
-              <Center>
-                <Image
-                  src={"logo.png"}
-                  alt="west bend high school bands tri m logo"
-                  height={50}
-                  width={100}
-                />
-              </Center>
-            </MediaQuery>
-
-            <MediaQuery smallerThan="md" styles={{ display: "none" }}>
-              <Group sx={{ height: "100%" }} px={20} position="apart">
-                <img
-                  src={"logo.png"}
-                  alt="west bend high school bands tri m logo"
-                  height="100%"
-                />
-
-                {loading ? null : (
-                  <User
-                    image={auth.currentUser?.photoURL ?? ""}
-                    name={userData?.name ?? ""}
-                    instrument={userData?.instrument ?? ""}
-                    logout={() => auth.signOut()}
+      {loggedIn ? (
+        <AppShell
+          padding="md"
+          header={
+            <Header height={80} p="xs">
+              <MediaQuery largerThan="md" styles={{ display: "none" }}>
+                <Center>
+                  <Image
+                    src={"logo.png"}
+                    alt="west bend high school bands tri m logo"
+                    height={50}
+                    width={100}
                   />
-                )}
-              </Group>
-            </MediaQuery>
-          </Header>
-        }
-      >
-        {loggedIn ? (
-          <>
-            {window.location.pathname === "/teachers" && adminView ? (
-              <ManageTeachersView app={app} />
-            ) : adminView ? (
-              <AdminView app={app} />
-            ) : (
-              <StudentView app={app} />
-            )}
-          </>
-        ) : (
-          <Flex style={{ height: "100%" }} justify="center" align="center">
-            <Title>Please login with Google</Title>
-          </Flex>
-        )}
-      </AppShell>
+                </Center>
+              </MediaQuery>
+
+              <MediaQuery smallerThan="md" styles={{ display: "none" }}>
+                <Group sx={{ height: "100%" }} px={20} position="apart">
+                  <img
+                    src={"logo.png"}
+                    alt="west bend high school bands tri m logo"
+                    height="100%"
+                  />
+
+                  {loading ? null : (
+                    <User
+                      image={auth.currentUser?.photoURL ?? ""}
+                      name={userData?.name ?? ""}
+                      instrument={userData?.instrument ?? ""}
+                      logout={() => auth.signOut()}
+                    />
+                  )}
+                </Group>
+              </MediaQuery>
+            </Header>
+          }
+        >
+          {window.location.pathname === "/teachers" && adminView ? (
+            <ManageTeachersView app={app} />
+          ) : adminView ? (
+            <AdminView app={app} />
+          ) : (
+            <StudentView app={app} />
+          )}
+        </AppShell>
+      ) : (
+        <Flex
+          style={{ height: "100vh" }}
+          justify="center"
+          align="center"
+          direction="column"
+        >
+          <Image
+            src={"logo.png"}
+            alt="west bend high school bands tri m logo"
+            width={200}
+          />
+          <Button
+            mt="md"
+            onClick={() => {
+              signInWithPopup(auth, provider);
+            }}
+          >
+            Sign in with Google
+          </Button>
+        </Flex>
+      )}
     </Container>
   );
 };
