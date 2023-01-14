@@ -21,6 +21,7 @@ import { User } from "./components/User";
 import { NewUserModal } from "./modals/NewUser";
 import { StudentView } from "./views/StudentView";
 import { AdminView } from "./views/AdminView";
+import { ManageTeachersView } from "./views/ManageTeachersView";
 
 export interface AppProps {
   app: FirebaseApp;
@@ -109,7 +110,13 @@ export const App = ({ app }: AppProps) => {
           </Header>
         }
       >
-        {adminView ? <AdminView app={app} /> : <StudentView app={app} />}
+        {window.location.pathname === "/teachers" && adminView ? (
+          <ManageTeachersView app={app} />
+        ) : adminView ? (
+          <AdminView app={app} />
+        ) : (
+          <StudentView app={app} />
+        )}
       </AppShell>
     </Container>
   );

@@ -12,7 +12,7 @@ interface NewUserModalProps {
   setOpened: (to: boolean) => void;
 }
 
-const instruments = [
+export const instruments = [
   "Flute",
   "Oboe",
   "Clarinet",

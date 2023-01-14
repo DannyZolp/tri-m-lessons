@@ -3,6 +3,7 @@ service firebase.storage {
   match /b/{bucket}/o {
     match /teachers/{document=**} {
     	allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.token.admin;
     }
   }
 }

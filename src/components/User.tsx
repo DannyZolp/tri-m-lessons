@@ -13,10 +13,17 @@ interface UserProps {
   image: string;
   name: string;
   instrument: string;
-  logout: () => void;
+  logout?: () => void;
+  onClick?: () => void;
 }
 
-export const User = ({ image, name, instrument, logout }: UserProps) => {
+export const User = ({
+  image,
+  name,
+  instrument,
+  logout,
+  onClick
+}: UserProps) => {
   const theme = useMantineTheme();
 
   return (
@@ -41,6 +48,7 @@ export const User = ({ image, name, instrument, logout }: UserProps) => {
                     : theme.colors.gray[0]
               }
             }}
+            onClick={onClick}
           >
             <Group>
               <Avatar src={image} radius="xl" />
@@ -57,10 +65,14 @@ export const User = ({ image, name, instrument, logout }: UserProps) => {
         </Box>
       </Menu.Target>
 
-      <Menu.Dropdown>
-        <Menu.Label>Settings</Menu.Label>
-        <Menu.Item icon={<IconLogout size={14} />} onClick={logout}>Logout</Menu.Item>
-      </Menu.Dropdown>
+      {logout ? (
+        <Menu.Dropdown>
+          <Menu.Label>Settings</Menu.Label>
+          <Menu.Item icon={<IconLogout size={14} />} onClick={logout}>
+            Logout
+          </Menu.Item>
+        </Menu.Dropdown>
+      ) : null}
     </Menu>
   );
 };
