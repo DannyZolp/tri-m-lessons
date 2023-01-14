@@ -163,6 +163,7 @@ export const ManageTeachersView = ({ app }: ManageTeachersViewProps) => {
                         data.imageFile
                       ).then((file) => {
                         addTeacher({
+                          id: activeUser,
                           name: data.name,
                           image: file.ref.toString(),
                           instruments: data.instruments,
