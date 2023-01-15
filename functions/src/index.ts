@@ -73,13 +73,17 @@ export const notifyUserOnCancel = functions
       await sms.messages.create({
         body: `We're sorry, but ${
           teacher.data()?.name
-        } had to cancel your lesson starting ${
+        } had to cancel your lesson during ${
           lesson.data().simpleTime
         } (${formatInTimeZone(
           lesson.data().startTime.toDate(),
           "America/Chicago",
           "hh:mm a"
-        )}) in the ${lesson.data().location}`,
+        )}) on ${formatInTimeZone(
+          lesson.data().startTime.toDate(),
+          "America/Chicago",
+          "MMMM do"
+        )}. Please contact them for further information on your cancellation`,
         messagingServiceSid: "MG8c76558f671d5bd05434de03b54584ba",
         to: student.data()?.phoneNumber
       });

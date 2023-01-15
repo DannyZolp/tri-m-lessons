@@ -27,7 +27,7 @@ import {
 import { useEffect, useState } from "react";
 import { ILesson } from "../types/ILesson";
 import { getPartOfDay } from "../utils/getPartOfDay";
-import { format, getMinutes } from "date-fns";
+import { addWeeks, format, getMinutes } from "date-fns";
 import { IconClock } from "@tabler/icons";
 import { openConfirmModal } from "@mantine/modals";
 import { getAuth } from "firebase/auth";
@@ -78,7 +78,8 @@ export const ViewLessonsModal = ({
           collection(db, "lessons"),
           where("teacherId", "==", teacher.id),
           where("studentId", "==", null),
-          where("startTime", ">", new Date())
+          where("startTime", ">", new Date()),
+          where("startTime", "<", addWeeks(new Date(), 2))
         ),
         (res) => {
           setLessons(
@@ -115,27 +116,38 @@ export const ViewLessonsModal = ({
         {teacher.name}
       </Badge>
 
-      <ScrollArea>
-        <Text color="dimmed">Click to Register</Text>
+      <Text ta="center" color="dimmed" my="md">
+        Click a time to register for
+      </Text>
+
+      <Grid>
         {lessons.map((l) => (
-          <Paper withBorder p="lg" onClick={() => openModal(l)} key={l.id}>
-            <Title size={20}>
-              {l.simpleTime}, {format(l.startTime, "MMMM do")}
-            </Title>
-            <Text>{l.location}</Text>
-            <Text color="dimmed">
-              <Group spacing="xs">
-                <IconClock />{" "}
-                <Text m={0}>
-                  {getMinutes(l.endTime.getTime() - l.startTime.getTime())} mins
-                  ({format(l.startTime, "h:mm a")} -{" "}
-                  {format(l.endTime, "h:mm a")})
-                </Text>
-              </Group>
-            </Text>
-          </Paper>
+          <Grid.Col span={12}>
+            <Paper
+              withBorder
+              p="lg"
+              onClick={() => openModal(l)}
+              key={l.id}
+              style={{ cursor: "pointer" }}
+            >
+              <Title size={20}>
+                {l.simpleTime}, {format(l.startTime, "MMMM do")}
+              </Title>
+              <Text>{l.location}</Text>
+              <Text color="dimmed">
+                <Group spacing="xs">
+                  <IconClock />{" "}
+                  <Text m={0}>
+                    {getMinutes(l.endTime.getTime() - l.startTime.getTime())}{" "}
+                    mins ({format(l.startTime, "h:mm a")} -{" "}
+                    {format(l.endTime, "h:mm a")})
+                  </Text>
+                </Group>
+              </Text>
+            </Paper>
+          </Grid.Col>
         ))}
-      </ScrollArea>
+      </Grid>
     </Modal>
   );
 };
