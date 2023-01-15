@@ -26,6 +26,7 @@ import {
   onSnapshot,
   query,
   setDoc,
+  updateDoc,
   where
 } from "firebase/firestore";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
@@ -107,7 +108,7 @@ export const StudentView = ({ app }: StudentViewProps) => {
   }, []);
 
   const cancelLesson = (id: string) => {
-    setDoc(doc(db, "lessons", id), {
+    updateDoc(doc(db, "lessons", id), {
       studentId: null
     }).then(() => {
       showNotification({
