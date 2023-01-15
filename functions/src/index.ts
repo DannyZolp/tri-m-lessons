@@ -129,7 +129,7 @@ export const notifyTeacherOfLessonUpdate = functions
       const student = await admin
         .firestore()
         .collection("users")
-        .doc(change.after.data().studentId)
+        .doc(change.before.data().studentId)
         .get();
 
       await sms.messages.create({
