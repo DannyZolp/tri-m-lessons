@@ -90,6 +90,62 @@ export const notifyUserOnCancel = functions
     }
   });
 
+export const notifyTeacherOfLessonUpdate = functions
+  .runWith({ secrets: [twilioApiKey.name] })
+  .firestore.document("lessons/{lessonId}")
+  .onUpdate(async (change) => {
+    const teacher = await admin
+      .firestore()
+      .collection("users")
+      .doc(change.before.data().teacherId)
+      .get();
+
+    const sms = twilio(
+      "ACc922019f043701fb28aa3b0b5219e538",
+      twilioApiKey.value()
+    );
+
+    if (change.before.data().studentId === null) {
+      // a user just signed up for this lesson
+      const student = await admin
+        .firestore()
+        .collection("users")
+        .doc(change.after.data().studentId)
+        .get();
+
+      await sms.messages.create({
+        body: `${student.data()?.name} just signed up for your ${
+          change.before.data().simpleTime
+        } lesson on ${formatInTimeZone(
+          change.before.data().startTime.toDate(),
+          "America/Chicago",
+          "MMMM do"
+        )}`,
+        messagingServiceSid: "MG8c76558f671d5bd05434de03b54584ba",
+        to: teacher.data()?.phoneNumber
+      });
+    } else {
+      // a user just cancelled this lesson
+      const student = await admin
+        .firestore()
+        .collection("users")
+        .doc(change.after.data().studentId)
+        .get();
+
+      await sms.messages.create({
+        body: `${student.data()?.name} just cancelled their ${
+          change.before.data().simpleTime
+        } lesson on ${formatInTimeZone(
+          change.before.data().startTime.toDate(),
+          "America/Chicago",
+          "MMMM do"
+        )}`,
+        messagingServiceSid: "MG8c76558f671d5bd05434de03b54584ba",
+        to: teacher.data()?.phoneNumber
+      });
+    }
+  });
+
 export const notifyUsersOfLessons = functions
   .runWith({ secrets: [twilioApiKey.name] })
   .pubsub.schedule("every 5 minutes")
@@ -126,9 +182,9 @@ export const notifyUsersOfLessons = functions
 
         if (student.data()?.phoneNumber) {
           await sms.messages.create({
-            body: `You have a lesson with ${teacher.data()?.name} starting ${
-              doc.simpleTime
-            } (${formatInTimeZone(
+            body: `Reminder: You have a lesson with ${
+              teacher.data()?.name
+            } starting ${doc.simpleTime} (${formatInTimeZone(
               doc.startTime.toDate(),
               "America/Chicago",
               "hh:mm a"

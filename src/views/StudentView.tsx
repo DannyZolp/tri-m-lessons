@@ -10,7 +10,8 @@ import {
   Badge,
   Center,
   Paper,
-  Divider
+  Divider,
+  ActionIcon
 } from "@mantine/core";
 import { FirebaseApp } from "firebase/app";
 import { grammaticallyCorrectJoin } from "../utils/gramaticallyCorrectJoin";
@@ -19,17 +20,21 @@ import { ITeacher } from "../types/ITeacher";
 import { getAuth } from "firebase/auth";
 import {
   collection,
+  doc,
   getDocs,
   getFirestore,
   onSnapshot,
   query,
+  setDoc,
   where
 } from "firebase/firestore";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import { ViewLessonsModal } from "../modals/ViewLessons";
 import { ILesson } from "../types/ILesson";
 import { format, getMinutes, subDays } from "date-fns";
-import { IconClock } from "@tabler/icons";
+import { IconClock, IconX } from "@tabler/icons";
+import { showNotification } from "@mantine/notifications";
+import { openConfirmModal } from "@mantine/modals";
 
 interface StudentViewProps {
   app: FirebaseApp;
@@ -76,29 +81,40 @@ export const StudentView = ({ app }: StudentViewProps) => {
           }
         );
 
-        getDocs(
+        onSnapshot(
           query(
             collection(db, "lessons"),
             where("studentId", "==", auth.currentUser?.uid),
             where("startTime", ">", subDays(new Date(), 1))
-          )
-        ).then((res) => {
-          setLessons(
-            res.docs.map(
-              (d) =>
-                ({
-                  ...d.data(),
-                  startTime: d.data().startTime.toDate(),
-                  endTime: d.data().endTime.toDate(),
-                  id: d.id
-                } as any)
-            )
-          );
-          setLoading(false);
-        });
+          ),
+          (res) => {
+            setLessons(
+              res.docs.map(
+                (d) =>
+                  ({
+                    ...d.data(),
+                    startTime: d.data().startTime.toDate(),
+                    endTime: d.data().endTime.toDate(),
+                    id: d.id
+                  } as any)
+              )
+            );
+            setLoading(false);
+          }
+        );
       });
     });
   }, []);
+
+  const cancelLesson = (id: string) => {
+    setDoc(doc(db, "lessons", id), {
+      studentId: null
+    }).then(() => {
+      showNotification({
+        message: "Lesson cancelled"
+      });
+    });
+  };
 
   return (
     <>
@@ -121,14 +137,14 @@ export const StudentView = ({ app }: StudentViewProps) => {
               <Grid.Col sm={12} md={6} key={l.id}>
                 <Paper withBorder p="lg" key={l.id}>
                   <Grid>
-                    <Grid.Col span={4}>
+                    <Grid.Col span={3}>
                       <Image
                         radius="sm"
                         src={teachers.find((t) => t.id === l.teacherId)?.image}
                         height={80}
                       />
                     </Grid.Col>
-                    <Grid.Col span={8}>
+                    <Grid.Col span="content">
                       <Title size={20}>
                         {l.simpleTime}, {format(l.startTime, "MMMM do")}
                       </Title>
@@ -148,6 +164,31 @@ export const StudentView = ({ app }: StudentViewProps) => {
                           </Text>
                         </Group>
                       </Text>
+                    </Grid.Col>
+                    <Grid.Col span="content">
+                      <ActionIcon
+                        color="red"
+                        onClick={() => {
+                          openConfirmModal({
+                            title: "Cancel Lesson",
+                            centered: true,
+                            children: (
+                              <Text size="sm">
+                                Are you sure that you want to cancel this
+                                lesson?
+                              </Text>
+                            ),
+                            labels: {
+                              confirm: "Cancel Lesson",
+                              cancel: "Nevermind"
+                            },
+                            confirmProps: { color: "red" },
+                            onConfirm: () => cancelLesson(l.id)
+                          });
+                        }}
+                      >
+                        <IconX />
+                      </ActionIcon>
                     </Grid.Col>
                   </Grid>
                 </Paper>

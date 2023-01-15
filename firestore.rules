@@ -12,6 +12,7 @@ service cloud.firestore {
     match /lessons/{document=**} {
       allow read: if request.auth != null;
       allow update: if request.auth != null && resource.data.studentId == null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["studentId"]) && request.resource.data.studentId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.studentId == request.auth.studentId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["studentId"]) && request.resource.data.studentId == null;
       allow create, update, delete: if request.auth != null && request.auth.token.admin;
     }
   }
