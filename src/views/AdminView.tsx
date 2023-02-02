@@ -81,8 +81,6 @@ export interface AdminViewProps {
   app: FirebaseApp;
 }
 
-const repeatOptions = ["never", "every day", "every week", "every month"];
-
 export const AdminView = ({ app }: AdminViewProps) => {
   const db = getFirestore(app);
   const auth = getAuth(app);
@@ -215,7 +213,7 @@ export const AdminView = ({ app }: AdminViewProps) => {
           lessonEndTimes.push(addBusinessDays(endTime, i));
         }
         break;
-      case "every week":
+      case `every ${format(form.values.day, "EEEE")}`:
         for (
           let i = 0;
           i < differenceInWeeks(new Date(2023, 5, 8), startTime);
@@ -582,7 +580,7 @@ export const AdminView = ({ app }: AdminViewProps) => {
               <Select
                 label="Repeat"
                 placeholder="Week"
-                data={repeatOptions}
+                data={["never", "every day", `every ${format(form.values.day, "EEEE")}`, "every month"]}
                 withAsterisk
                 {...form.getInputProps("repeat")}
               />
