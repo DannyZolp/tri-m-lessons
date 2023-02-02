@@ -213,7 +213,7 @@ export const AdminView = ({ app }: AdminViewProps) => {
           lessonEndTimes.push(addBusinessDays(endTime, i));
         }
         break;
-      case "every week":
+      case `every ${format(form.values.day, "EEEE")}`:
         for (
           let i = 0;
           i < differenceInWeeks(new Date(2023, 5, 8), startTime);
