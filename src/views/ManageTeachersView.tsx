@@ -17,10 +17,13 @@ import { FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import {
   collection,
+  deleteDoc,
   doc,
   getDocs,
   getFirestore,
-  setDoc
+  query,
+  setDoc,
+  where
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { IUser } from "../types/IUser";
@@ -43,11 +46,16 @@ export const ManageTeachersView = ({ app }: ManageTeachersViewProps) => {
 
   const deleteTeacher = httpsCallable(functions, "deleteTeacher");
   const addTeacher = httpsCallable(functions, "addTeacher");
+  const deleteOverlappingLessons = httpsCallable(
+    functions,
+    "deleteOverlappingLessons"
+  );
 
   const [users, setUsers] = useState<IUser[]>([]);
   const [teachers, setTeachers] = useState<ITeacher[]>([]);
   const [activeUser, setActiveUser] = useState<string>("");
   const [creatingTeacher, setCreatingTeacher] = useState<boolean>(false);
+  const [deletingOverlaps, setDeletingOverlaps] = useState<boolean>(false);
   const [password, setPassword] = useState<string>("");
 
   const form = useForm({
@@ -123,34 +131,65 @@ export const ManageTeachersView = ({ app }: ManageTeachersViewProps) => {
                 <>
                   <Title size={20}>Teacher Settings</Title>
 
-                  <Button
-                    color="red"
-                    mt="sm"
-                    loading={creatingTeacher}
-                    disabled={creatingTeacher}
-                    onClick={() => {
-                      setCreatingTeacher(true);
-                      deleteTeacher({
-                        password,
-                        id: activeUser
-                      }).then((res) => {
-                        if (res) {
-                          showNotification({
-                            message: "Successfully deleted teacher!"
-                          });
-                          setCreatingTeacher(false);
-                        } else {
-                          showNotification({
-                            color: "red",
-                            message: "Error deleting teacher"
-                          });
-                          setCreatingTeacher(false);
-                        }
-                      });
-                    }}
-                  >
-                    Remove Teacher
-                  </Button>
+                  <Group>
+                    <Button
+                      color="red"
+                      mt="sm"
+                      loading={creatingTeacher}
+                      disabled={creatingTeacher}
+                      onClick={() => {
+                        setCreatingTeacher(true);
+                        deleteTeacher({
+                          password,
+                          id: activeUser
+                        }).then((res) => {
+                          if (res.data) {
+                            showNotification({
+                              message: "Successfully deleted teacher!"
+                            });
+                            setCreatingTeacher(false);
+                          } else {
+                            showNotification({
+                              color: "red",
+                              message: "Error deleting teacher"
+                            });
+                            setCreatingTeacher(false);
+                          }
+                        });
+                      }}
+                    >
+                      Remove Teacher
+                    </Button>
+                    <Button
+                      color="red"
+                      mt="sm"
+                      loading={deletingOverlaps}
+                      disabled={deletingOverlaps}
+                      onClick={() => {
+                        setDeletingOverlaps(true);
+                        deleteOverlappingLessons({
+                          password,
+                          teacherId: activeUser
+                        }).then((res) => {
+                          if (res.data) {
+                            showNotification({
+                              message:
+                                "Successfully deleted overlapping lessons!"
+                            });
+                            setDeletingOverlaps(false);
+                          } else {
+                            showNotification({
+                              color: "red",
+                              message: "Error deleting overlapping lessons"
+                            });
+                            setDeletingOverlaps(false);
+                          }
+                        });
+                      }}
+                    >
+                      Delete All Overlapping Lessons
+                    </Button>
+                  </Group>
                 </>
               ) : (
                 <>

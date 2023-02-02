@@ -48,6 +48,44 @@ export const addTeacher = functions
     }
   });
 
+export const deleteOverlappingLessons = functions
+  .runWith({ secrets: [manageTeachersPassword.name] })
+  .https.onCall(async (data, ctx) => {
+    if (
+      ctx.auth?.token.admin &&
+      data.password === manageTeachersPassword.value()
+    ) {
+      const teacherLessons = await admin
+        .firestore()
+        .collection("lessons")
+        .where("teacherId", "==", data.teacherId)
+        .get();
+
+      const startTimes: Date[] = [];
+      const deletingLessons: string[] = [];
+
+      for (let i = 0; i < teacherLessons.size; i++) {
+        if (startTimes.includes(teacherLessons.docs[i].data().startTime)) {
+          deletingLessons.push(teacherLessons.docs[i].id);
+        } else {
+          startTimes.push(teacherLessons.docs[i].data().startTime);
+        }
+      }
+
+      for (let i = 0; i < deletingLessons.length; i++) {
+        await admin
+          .firestore()
+          .collection("lessons")
+          .doc(deletingLessons[i])
+          .delete();
+      }
+
+      return true;
+    } else {
+      return false;
+    }
+  });
+
 export const notifyUserOnCancel = functions
   .runWith({ secrets: [twilioApiKey.name] })
   .firestore.document("lessons/{lessonId}")
