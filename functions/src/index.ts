@@ -2,7 +2,7 @@ import * as functions from "firebase-functions";
 import admin from "firebase-admin";
 import { defineSecret } from "firebase-functions/v2/params";
 import twilio from "twilio";
-import { addMinutes } from "date-fns";
+import { addMinutes, isEqual } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 const twilioApiKey = defineSecret("TWILIO_API_KEY");
 const manageTeachersPassword = defineSecret("MANAGE_TEACHERS_PASSWORD");
@@ -65,7 +65,11 @@ export const deleteOverlappingLessons = functions
       const deletingLessons: string[] = [];
 
       for (let i = 0; i < teacherLessons.size; i++) {
-        if (startTimes.includes(teacherLessons.docs[i].data().startTime)) {
+        if (
+          startTimes.findIndex((t) =>
+            isEqual(t, teacherLessons.docs[i].data().startTime)
+          ) > -1
+        ) {
           deletingLessons.push(teacherLessons.docs[i].id);
         } else {
           startTimes.push(teacherLessons.docs[i].data().startTime);
