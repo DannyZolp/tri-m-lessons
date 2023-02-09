@@ -1,10 +1,42 @@
 import * as functions from "firebase-functions";
 import admin from "firebase-admin";
 import { defineSecret } from "firebase-functions/v2/params";
-import twilio from "twilio";
 import { addMinutes, isEqual } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
+import { SecretParam } from "firebase-functions/lib/v2/params/types";
+import { sendUpdates } from "./sendUpdates";
+
 const twilioApiKey = defineSecret("TWILIO_API_KEY");
+const twilioAccountSid = defineSecret("TWILIO_ACCOUNT_SID");
+const twilioMessageSid = defineSecret("TWILIO_MESSAGE_SID");
+
+const sendgridApiKey = defineSecret("SENDGRID_API_KEY");
+const sendgridFromEmail = defineSecret("SENDGRID_FROM_EMAIL");
+
+const sendingEmailsAndTextSecrets = [
+  twilioApiKey.name,
+  twilioAccountSid.name,
+  twilioMessageSid.name,
+  sendgridApiKey.name,
+  sendgridFromEmail.name
+];
+
+const secrets = {
+  twilioApiKey,
+  twilioAccountSid,
+  twilioMessageSid,
+  sendgridApiKey,
+  sendgridFromEmail
+};
+
+export interface ISecrets {
+  twilioApiKey: SecretParam;
+  twilioAccountSid: SecretParam;
+  twilioMessageSid: SecretParam;
+  sendgridApiKey: SecretParam;
+  sendgridFromEmail: SecretParam;
+}
+
 const manageTeachersPassword = defineSecret("MANAGE_TEACHERS_PASSWORD");
 
 admin.initializeApp(functions.config().firebase);
@@ -91,49 +123,42 @@ export const deleteOverlappingLessons = functions
   });
 
 export const notifyUserOnCancel = functions
-  .runWith({ secrets: [twilioApiKey.name] })
+  .runWith({ secrets: [...sendingEmailsAndTextSecrets] })
   .firestore.document("lessons/{lessonId}")
   .onDelete(async (lesson) => {
-    const sms = twilio(
-      "ACc922019f043701fb28aa3b0b5219e538",
-      twilioApiKey.value()
-    );
-
     const student = await admin
       .firestore()
       .collection("users")
       .doc(lesson.data().studentId)
       .get();
+    const teacher = await admin
+      .firestore()
+      .collection("users")
+      .doc(lesson.data().teacherId)
+      .get();
 
-    if (student.data()?.phoneNumber) {
-      const teacher = await admin
-        .firestore()
-        .collection("users")
-        .doc(lesson.data().teacherId)
-        .get();
-
-      await sms.messages.create({
-        body: `We're sorry, but ${
-          teacher.data()?.name
-        } had to cancel your lesson during ${
-          lesson.data().simpleTime
-        } (${formatInTimeZone(
-          lesson.data().startTime.toDate(),
-          "America/Chicago",
-          "hh:mm a"
-        )}) on ${formatInTimeZone(
-          lesson.data().startTime.toDate(),
-          "America/Chicago",
-          "MMMM do"
-        )}. Please contact them for further information on your cancellation`,
-        messagingServiceSid: "MG8c76558f671d5bd05434de03b54584ba",
-        to: student.data()?.phoneNumber
-      });
-    }
+    sendUpdates(
+      student.data(),
+      `We're sorry, but ${
+        teacher.data()?.name
+      } had to cancel your lesson during ${
+        lesson.data().simpleTime
+      } (${formatInTimeZone(
+        lesson.data().startTime.toDate(),
+        "America/Chicago",
+        "hh:mm a"
+      )}) on ${formatInTimeZone(
+        lesson.data().startTime.toDate(),
+        "America/Chicago",
+        "MMMM do"
+      )}. Please contact them for further information on your cancellation`,
+      "Lesson Cancelation",
+      secrets
+    );
   });
 
 export const notifyTeacherOfLessonUpdate = functions
-  .runWith({ secrets: [twilioApiKey.name] })
+  .runWith({ secrets: [...sendingEmailsAndTextSecrets] })
   .firestore.document("lessons/{lessonId}")
   .onUpdate(async (change) => {
     const teacher = await admin
@@ -141,11 +166,6 @@ export const notifyTeacherOfLessonUpdate = functions
       .collection("users")
       .doc(change.before.data().teacherId)
       .get();
-
-    const sms = twilio(
-      "ACc922019f043701fb28aa3b0b5219e538",
-      twilioApiKey.value()
-    );
 
     if (change.before.data().studentId === null) {
       // a user just signed up for this lesson
@@ -155,17 +175,18 @@ export const notifyTeacherOfLessonUpdate = functions
         .doc(change.after.data().studentId)
         .get();
 
-      await sms.messages.create({
-        body: `${student.data()?.name} just signed up for your ${
+      sendUpdates(
+        teacher.data(),
+        `${student.data()?.name} just signed up for your ${
           change.before.data().simpleTime
         } lesson on ${formatInTimeZone(
           change.before.data().startTime.toDate(),
           "America/Chicago",
           "MMMM do"
         )}`,
-        messagingServiceSid: "MG8c76558f671d5bd05434de03b54584ba",
-        to: teacher.data()?.phoneNumber
-      });
+        "New Signup",
+        secrets
+      );
     } else {
       // a user just cancelled this lesson
       const student = await admin
@@ -174,29 +195,25 @@ export const notifyTeacherOfLessonUpdate = functions
         .doc(change.before.data().studentId)
         .get();
 
-      await sms.messages.create({
-        body: `${student.data()?.name} just cancelled their ${
+      sendUpdates(
+        teacher.data(),
+        `${student.data()?.name} just cancelled their ${
           change.before.data().simpleTime
         } lesson on ${formatInTimeZone(
           change.before.data().startTime.toDate(),
           "America/Chicago",
           "MMMM do"
         )}`,
-        messagingServiceSid: "MG8c76558f671d5bd05434de03b54584ba",
-        to: teacher.data()?.phoneNumber
-      });
+        "Lesson Cancellation",
+        secrets
+      );
     }
   });
 
 export const notifyUsersOfLessons = functions
-  .runWith({ secrets: [twilioApiKey.name] })
+  .runWith({ secrets: [...sendingEmailsAndTextSecrets] })
   .pubsub.schedule("every 5 minutes")
   .onRun(async () => {
-    const sms = twilio(
-      "ACc922019f043701fb28aa3b0b5219e538",
-      twilioApiKey.value()
-    );
-
     const lessons = await admin
       .firestore()
       .collection("/lessons")
@@ -222,33 +239,31 @@ export const notifyUsersOfLessons = functions
           .doc(doc.teacherId)
           .get();
 
-        if (student.data()?.phoneNumber) {
-          await sms.messages.create({
-            body: `Reminder: You have a lesson with ${
-              teacher.data()?.name
-            } starting ${doc.simpleTime} (${formatInTimeZone(
-              doc.startTime.toDate(),
-              "America/Chicago",
-              "hh:mm a"
-            )}) in the ${doc.location}`,
-            messagingServiceSid: "MG8c76558f671d5bd05434de03b54584ba",
-            to: student.data()?.phoneNumber
-          });
-        }
+        sendUpdates(
+          student.data(),
+          `Reminder: You have a lesson with ${teacher.data()?.name} starting ${
+            doc.simpleTime
+          } (${formatInTimeZone(
+            doc.startTime.toDate(),
+            "America/Chicago",
+            "hh:mm a"
+          )}) in the ${doc.location}`,
+          "Lesson Reminder",
+          secrets
+        );
 
-        if (teacher.data()?.phoneNumber) {
-          await sms.messages.create({
-            body: `You have a lesson with ${
-              student.data()?.name
-            } starting at ${formatInTimeZone(
-              doc.startTime.toDate(),
-              "America/Chicago",
-              "hh:mm a"
-            )}`,
-            messagingServiceSid: "MG8c76558f671d5bd05434de03b54584ba",
-            to: student.data()?.phoneNumber
-          });
-        }
+        sendUpdates(
+          teacher.data(),
+          `You have a lesson with ${student.data()?.name} (${
+            student.data()?.pronouns
+          }) starting at ${formatInTimeZone(
+            doc.startTime.toDate(),
+            "America/Chicago",
+            "hh:mm a"
+          )}`,
+          "Lesson Reminder",
+          secrets
+        );
 
         await admin
           .firestore()

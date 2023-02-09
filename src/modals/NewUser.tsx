@@ -1,5 +1,6 @@
 import {
   Button,
+  Collapse,
   Grid,
   Group,
   Input,
@@ -10,7 +11,7 @@ import {
 } from "@mantine/core";
 import { FirebaseApp } from "firebase/app";
 import { useForm } from "@mantine/form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { doc, setDoc, getFirestore, collection } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import phone from "phone";
@@ -49,6 +50,7 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
     "she/they",
     "they/them"
   ]);
+  const [phoneRequired, setPhoneRequired] = useState<boolean>(true);
 
   const [saving, setSaving] = useState<boolean>(false);
 
@@ -57,7 +59,8 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
       name: "",
       pronouns: "",
       phoneNumber: "",
-      instrument: ""
+      instrument: "",
+      updatesVia: "text"
     },
     validate: {
       name: (v) => (v.length > 0 ? null : "Please provide a name"),
@@ -66,15 +69,28 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
       instrument: (v) =>
         v.length > 0 ? null : "Please select your instrument",
       phoneNumber: (v) =>
-        phone(v).isValid ? null : "Please enter a valid phone number"
+        phoneRequired
+          ? phone(v).isValid
+            ? null
+            : "Please enter a valid phone number"
+          : null
     }
   });
+
+  useEffect(() => {
+    if (form.values.updatesVia !== "email") {
+      setPhoneRequired(true);
+    } else {
+      setPhoneRequired(false);
+    }
+  }, [form.values.updatesVia]);
 
   const handleSubmit = (values: any) => {
     setSaving(true);
     setDoc(doc(collection(db, "users"), auth.currentUser?.uid ?? ""), {
       ...values,
-      phoneNumber: phone(values.phoneNumber).phoneNumber
+      phoneNumber: phone(values.phoneNumber).phoneNumber,
+      email: auth.currentUser?.email
     }).then(() => {
       setOpened(false);
     });
@@ -95,6 +111,7 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
           data={pronounOptions}
           placeholder="Select one"
           nothingFound="Nothing found"
+          withAsterisk
           searchable
           creatable
           getCreateLabel={(query) => `+ Create ${query}`}
@@ -105,7 +122,7 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
           {...form.getInputProps("pronouns")}
         />
 
-        <Input.Wrapper label="Receive updates via">
+        <Input.Wrapper label="Receive Updates via" withAsterisk>
           <SegmentedControl
             fullWidth
             data={[
@@ -113,15 +130,19 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
               { label: "Email", value: "email" },
               { label: "Both", value: "both" }
             ]}
+            {...form.getInputProps("updatesVia")}
           />
         </Input.Wrapper>
 
-        <TextInput
-          label="Phone number"
-          placeholder="262-123-4567"
-          description="If you wish to receive updates of your lessons via text messages, enter your phone number here. Standard texting and data rates may apply."
-          {...form.getInputProps("phoneNumber")}
-        />
+        <Collapse in={phoneRequired}>
+          <TextInput
+            withAsterisk
+            label="Phone number"
+            placeholder="262-123-4567"
+            description="Standard texting and data rates may apply."
+            {...form.getInputProps("phoneNumber")}
+          />
+        </Collapse>
 
         <Select
           label="Main Instrument"
@@ -132,7 +153,7 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
         />
 
         <Button type="submit" mt="sm" loading={saving}>
-          Save
+          Create Profile
         </Button>
       </form>
     </Modal>
