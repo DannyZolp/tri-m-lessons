@@ -77,7 +77,7 @@ const LoadedApp = ({ app }: AppProps) => {
   }, [loggedIn]);
 
   return (
-    <>
+    <Container>
       <LoadingOverlay visible={loading} />
       <NewUserModal setOpened={setNewUser} opened={newUser} app={app} />
       {loggedIn ? (
@@ -147,7 +147,7 @@ const LoadedApp = ({ app }: AppProps) => {
           </Button>
         </Flex>
       )}
-    </>
+    </Container>
   );
 };
 

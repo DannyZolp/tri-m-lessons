@@ -11,8 +11,7 @@ import {
   Center,
   Paper,
   Divider,
-  ActionIcon,
-  Container
+  ActionIcon
 } from "@mantine/core";
 import { FirebaseApp } from "firebase/app";
 import { grammaticallyCorrectJoin } from "../utils/gramaticallyCorrectJoin";
@@ -119,7 +118,7 @@ export const StudentView = ({ app }: StudentViewProps) => {
   };
 
   return (
-    <Container>
+    <>
       <ViewLessonsModal
         app={app}
         teacher={viewingTeacher}
@@ -248,6 +247,6 @@ export const StudentView = ({ app }: StudentViewProps) => {
           </Grid.Col>
         ))}
       </Grid>
-    </Container>
+    </>
   );
 };
