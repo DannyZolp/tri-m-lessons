@@ -1,23 +1,24 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { MantineProvider, Text } from "@mantine/core";
+import { MantineProvider } from "@mantine/core";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { App } from "./App";
 import { NotificationsProvider } from "@mantine/notifications";
 import { ModalsProvider } from "@mantine/modals";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDAAZ9I3Xq09Ias2WuVNhm3X376zkwLTzM",
-  authDomain: "tri-m-lessons.firebaseapp.com",
-  projectId: "tri-m-lessons",
-  storageBucket: "tri-m-lessons.appspot.com",
-  messagingSenderId: "703890377241",
-  appId: "1:703890377241:web:a5ac6ff21312fc8120f888",
-  measurementId: "G-230JZ26ZFE"
-};
+const app = import.meta.env.DEV
+  ? initializeApp({
+      apiKey: import.meta.env.VITE_API_KEY,
+      authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_APP_ID,
+      measurementId: import.meta.env.VITE_MEASUREMENT_ID
+    })
+  : initializeApp();
 
-const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

@@ -1,4 +1,13 @@
-import { Button, Grid, Group, Modal, Select, TextInput } from "@mantine/core";
+import {
+  Button,
+  Grid,
+  Group,
+  Input,
+  Modal,
+  SegmentedControl,
+  Select,
+  TextInput
+} from "@mantine/core";
 import { FirebaseApp } from "firebase/app";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
@@ -95,6 +104,17 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
           }}
           {...form.getInputProps("pronouns")}
         />
+
+        <Input.Wrapper label="Receive updates via">
+          <SegmentedControl
+            fullWidth
+            data={[
+              { label: "Text Messages", value: "text" },
+              { label: "Email", value: "email" },
+              { label: "Both", value: "both" }
+            ]}
+          />
+        </Input.Wrapper>
 
         <TextInput
           label="Phone number"
