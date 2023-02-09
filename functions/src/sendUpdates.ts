@@ -21,11 +21,11 @@ export const sendUpdates = (
         twilioMessageSid.value(),
         twilioApiKey.value(),
         message,
-        student.data()?.phoneNumber
+        student.phoneNumber
       );
       sendEmail(
         sendgridApiKey.value(),
-        student.data()?.email,
+        student.email,
         sendgridFromEmail.value(),
         subject,
         message
@@ -37,13 +37,13 @@ export const sendUpdates = (
         twilioMessageSid.value(),
         twilioApiKey.value(),
         message,
-        student.data()?.phoneNumber
+        student.phoneNumber
       );
       break;
     case "email":
       sendEmail(
         sendgridApiKey.value(),
-        student.data()?.email,
+        student.email,
         sendgridFromEmail.value(),
         subject,
         message
@@ -55,7 +55,7 @@ export const sendUpdates = (
         twilioMessageSid.value(),
         twilioApiKey.value(),
         message,
-        student.data()?.phoneNumber
+        student.phoneNumber
       );
       break;
     }
