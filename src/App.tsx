@@ -12,7 +12,7 @@ import {
   MediaQuery,
   Title
 } from "@mantine/core";
-import { FirebaseApp } from "firebase/app";
+import { FirebaseApp, initializeApp } from "firebase/app";
 import {
   GoogleAuthProvider,
   getAuth,
@@ -31,7 +31,7 @@ export interface AppProps {
   app: FirebaseApp;
 }
 
-export const App = ({ app }: AppProps) => {
+const LoadedApp = ({ app }: AppProps) => {
   const auth = getAuth(app);
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
@@ -77,7 +77,7 @@ export const App = ({ app }: AppProps) => {
   }, [loggedIn]);
 
   return (
-    <Container>
+    <>
       <LoadingOverlay visible={loading} />
       <NewUserModal setOpened={setNewUser} opened={newUser} app={app} />
       {loggedIn ? (
@@ -147,6 +147,32 @@ export const App = ({ app }: AppProps) => {
           </Button>
         </Flex>
       )}
-    </Container>
+    </>
   );
+};
+
+export const App = () => {
+  const [app, setApp] = useState<FirebaseApp>();
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      initializeApp({
+        apiKey: import.meta.env.VITE_API_KEY,
+        authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+        projectId: import.meta.env.VITE_PROJECT_ID,
+        storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+        messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+        appId: import.meta.env.VITE_APP_ID,
+        measurementId: import.meta.env.VITE_MEASUREMENT_ID
+      });
+    } else {
+      fetch("/__/firebase/init.json")
+        .then((res) => res.json())
+        .then((json) => {
+          setApp(initializeApp(json));
+        });
+    }
+  }, []);
+
+  return app ? <LoadedApp app={app} /> : null;
 };
