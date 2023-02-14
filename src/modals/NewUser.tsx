@@ -93,6 +93,7 @@ export const NewUserModal = ({ app, opened, setOpened }: NewUserModalProps) => {
       email: auth.currentUser?.email
     }).then(() => {
       setOpened(false);
+      window.location.reload();
     });
   };
 

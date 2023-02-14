@@ -107,7 +107,9 @@ const LoadedApp = ({ app }: AppProps) => {
                   {loading ? null : (
                     <User
                       image={auth.currentUser?.photoURL ?? ""}
-                      name={userData?.name ?? ""}
+                      name={
+                        userData?.name ?? auth.currentUser?.displayName ?? ""
+                      }
                       instrument={userData?.instrument ?? ""}
                       logout={() => auth.signOut()}
                     />
